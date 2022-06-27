@@ -7,7 +7,7 @@ list_psw = get_psw_from_wiki() # 225 шт
 i = 1
 for psw in list_psw:
     print(i) # чтобы видеть прогресс во время выполнения скрипта
-    parametrs = {"login": login, "password": "psw"}
+    parametrs = {"login": login, "password": psw}
     response = requests.post('https://playground.learnqa.ru/ajax/api/get_secret_password_homework', data=parametrs)
     # print(response.text)
     cookies = {}

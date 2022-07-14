@@ -3,6 +3,9 @@ from datetime import datetime
 from requests import Response
 from json.decoder import JSONDecodeError
 
+from Lib.assertions import Assertions
+from Lib.my_requests import MyRequests
+
 
 class BaseCase:
     def get_cookie(self, response: Response, cookie_name):
@@ -43,3 +46,50 @@ class BaseCase:
                 'lastName': lastName,
                 'email': email
             }
+
+    def register_and_auth_new_user(self):
+        # Register
+        register_data = self.prepare_registration_data()
+        response1 = MyRequests.post("/user", data=register_data)
+        Assertions.assert_code_status(response1, 200)
+        Assertions.assert_json_has_key(response1, "id")
+
+        email = register_data['email']
+        first_name = register_data['firstName']
+        last_name = register_data['lastName']
+        password = register_data['password']
+        user_id = self.get_json_value(response1, "id")
+
+        # Login
+        login_data = {
+            'email': email,
+            'password': password
+        }
+        response2 = MyRequests.post("/user/login", data=login_data)
+        auth_sid = self.get_cookie(response2, "auth_sid")
+        token = self.get_header(response2, "x-csrf-token")
+
+        return {
+            "auth_sid": auth_sid,
+            "token": token,
+            "email": email,
+            "password": password,
+            "user_id": user_id
+        }
+
+    def auth_user_with_id_2(self):
+        data = {
+            'email': 'vinkotov@example.com',
+            'password': '1234'
+        }
+
+        response1 = MyRequests.post("/user/login", data=data)
+
+        auth_sid = self.get_cookie(response1, "auth_sid")
+        token = self.get_header(response1, "x-csrf-token")
+        user_id_from_auth_method = self.get_json_value(response1, "user_id")
+        return {
+            "auth_sid": auth_sid,
+            "token": token,
+            "user_id": user_id_from_auth_method
+        }
